@@ -1,0 +1,135 @@
+@import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600&display=swap');
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+    background: #06040e;
+    color: rgba(210, 205, 228, 0.85);
+    font-family: 'Cinzel', serif;
+    padding: 36px 40px 32px;
+    min-height: 100vh;
+}
+
+.emblem {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 20px;
+}
+
+.emblem svg {
+    width: 36px;
+    height: 36px;
+    color: rgba(210, 205, 228, 0.4);
+}
+
+h1 {
+    font-size: 18px;
+    font-weight: 600;
+    letter-spacing: 4px;
+    text-align: center;
+    color: rgba(240, 235, 255, 0.9);
+    margin-bottom: 8px;
+}
+
+.subtitle {
+    font-size: 10px;
+    letter-spacing: 2px;
+    text-align: center;
+    color: rgba(180, 175, 200, 0.5);
+    margin-bottom: 28px;
+}
+
+.steps {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    margin-bottom: 20px;
+}
+
+.step {
+    display: flex;
+    align-items: flex-start;
+    gap: 16px;
+    background: rgba(255,255,255,0.03);
+    border: 1px solid rgba(210,205,228,0.12);
+    border-radius: 3px;
+    padding: 16px 18px;
+}
+
+.step-number {
+    font-size: 11px;
+    font-weight: 600;
+    color: rgba(210,205,228,0.3);
+    letter-spacing: 1px;
+    padding-top: 2px;
+    flex-shrink: 0;
+}
+
+.step-title {
+    font-size: 11px;
+    letter-spacing: 2px;
+    color: rgba(240,235,255,0.8);
+    margin-bottom: 5px;
+}
+
+.step-desc {
+    font-size: 9px;
+    letter-spacing: 1px;
+    color: rgba(180,175,200,0.5);
+    margin-bottom: 12px;
+    line-height: 1.6;
+}
+
+.step button {
+    background: transparent;
+    border: 1px solid rgba(210,205,228,0.25);
+    color: rgba(210,205,228,0.6);
+    font-family: 'Cinzel', serif;
+    font-size: 8px;
+    letter-spacing: 1.5px;
+    padding: 6px 12px;
+    border-radius: 2px;
+    cursor: pointer;
+    transition: border-color 0.1s, color 0.1s;
+}
+
+.step button:hover {
+    border-color: rgba(210,205,228,0.6);
+    color: rgba(240,235,255,0.9);
+}
+
+.hint {
+    font-size: 9px;
+    letter-spacing: 1px;
+    color: rgba(180,175,200,0.4);
+    text-align: center;
+    line-height: 1.7;
+    margin-bottom: 24px;
+    padding: 0 10px;
+}
+
+.hint strong {
+    color: rgba(210,205,228,0.65);
+    font-weight: 400;
+}
+
+.done-btn {
+    display: block;
+    width: 100%;
+    background: transparent;
+    border: 1px solid rgba(210,205,228,0.3);
+    color: rgba(240,235,255,0.75);
+    font-family: 'Cinzel', serif;
+    font-size: 9px;
+    letter-spacing: 3px;
+    padding: 12px;
+    border-radius: 2px;
+    cursor: pointer;
+    transition: background 0.1s, color 0.1s, border-color 0.1s;
+}
+
+.done-btn:hover {
+    background: rgba(255,255,255,0.05);
+    border-color: rgba(210,205,228,0.6);
+    color: rgba(255,255,255,0.9);
+}

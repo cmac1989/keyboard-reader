@@ -1,0 +1,257 @@
+@import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600&display=swap');
+
+* { box-sizing: border-box; }
+
+body {
+    margin: 0;
+    background: transparent;
+    font-family: 'Cinzel', serif;
+    -webkit-app-region: drag;
+    user-select: none;
+}
+
+/* ── Container ── */
+#overlay {
+    position: relative;
+    display: inline-flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    background: rgba(5, 4, 12, 0.94);
+    border: 1px solid rgba(210, 205, 228, 0.2);
+    border-radius: 2px;
+    padding: 14px 16px 16px;
+    box-shadow:
+        0 0 0 1px rgba(255,255,255,0.03),
+        inset 0 0 80px rgba(0,0,0,0.5),
+        0 8px 40px rgba(0,0,0,0.9);
+}
+
+/* ── State indicators ── */
+#overlay.locked .corner::before,
+#overlay.locked .corner::after {
+    background: rgba(255, 200, 80, 0.5);
+}
+
+#overlay.click-through {
+    opacity: 0.6;
+}
+
+/* ── Corner ornaments ── */
+.corner {
+    position: absolute;
+    width: 8px;
+    height: 8px;
+}
+.corner::before,
+.corner::after {
+    content: '';
+    position: absolute;
+    background: rgba(210, 205, 228, 0.35);
+}
+.corner::before { width: 100%; height: 1px; top: 0; left: 0; }
+.corner::after  { width: 1px; height: 100%; top: 0; left: 0; }
+.corner.tl { top: 5px;    left: 5px; }
+.corner.tr { top: 5px;    right: 5px;  transform: scaleX(-1); }
+.corner.bl { bottom: 5px; left: 5px;   transform: scaleY(-1); }
+.corner.br { bottom: 5px; right: 5px;  transform: scale(-1); }
+
+/* ── Header ── */
+.header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    width: 100%;
+}
+.header-line {
+    flex: 1;
+    height: 1px;
+    background: linear-gradient(to right, transparent, rgba(210, 205, 228, 0.18));
+}
+.header .header-line:last-child {
+    background: linear-gradient(to left, transparent, rgba(210, 205, 228, 0.18));
+}
+.emblem-svg {
+    width: 20px;
+    height: 20px;
+    color: rgba(210, 205, 228, 0.4);
+    flex-shrink: 0;
+}
+
+#close-btn {
+    background: none;
+    border: none;
+    color: rgba(200, 195, 215, 0.25);
+    font-size: 9px;
+    cursor: pointer;
+    padding: 0 0 0 6px;
+    line-height: 1;
+    -webkit-app-region: no-drag;
+    transition: color 0.1s;
+    flex-shrink: 0;
+}
+
+#close-btn:hover {
+    color: rgba(255, 100, 100, 0.7);
+}
+
+/* ── Layout ── */
+.groups {
+    display: flex;
+    align-items: center;
+    gap: 0;
+}
+.group-divider {
+    width: 1px;
+    height: 72px;
+    background: linear-gradient(to bottom, transparent, rgba(210,205,228,0.15), transparent);
+    margin: 0 10px;
+}
+.section { }
+.row {
+    display: flex;
+    justify-content: center;
+    gap: 3px;
+    margin-bottom: 3px;
+}
+.row:last-child { margin-bottom: 0; }
+
+/* ── Keys ── */
+.key {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    width: 50px;
+    height: 58px;
+    background: rgba(255,255,255,0.02);
+    color: rgba(195, 190, 215, 0.38);
+    border: 1px solid rgba(195, 190, 215, 0.13);
+    border-radius: 2px;
+    -webkit-app-region: no-drag;
+    transition:
+        color       0.07s ease,
+        background  0.07s ease,
+        border-color 0.07s ease,
+        box-shadow  0.07s ease;
+}
+
+.key svg {
+    width: 28px;
+    height: 28px;
+    filter: url(#sketch);
+    transform-origin: center;
+    transition: filter 0.08s ease, transform 0.08s ease, opacity 0.08s ease;
+}
+
+/* Force consistent stroke rendering on all SVG children */
+.key svg *  {
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    vector-effect: non-scaling-stroke;
+}
+
+.key span {
+    font-size: 6.5px;
+    letter-spacing: 1.5px;
+    opacity: 0.7;
+    text-transform: uppercase;
+    line-height: 1;
+    transition: opacity 0.08s ease;
+}
+
+/* ── Active state ── */
+.key.active {
+    color: rgba(248, 245, 255, 1);
+    background: rgba(248, 245, 255, 0.07);
+    border-color: rgba(248, 245, 255, 0.55);
+    box-shadow:
+        0 0 12px rgba(230, 225, 255, 0.22),
+        0 0 4px  rgba(230, 225, 255, 0.4),
+        inset 0 0 10px rgba(230, 225, 255, 0.06);
+    animation: flare 0.07s ease forwards;
+}
+
+.key.active svg {
+    filter: url(#glow);
+    transform: scale(1.1);
+}
+
+.key.active span {
+    opacity: 1;
+}
+
+@keyframes flare {
+    0%   { box-shadow: 0 0 20px rgba(230,225,255,0.45), inset 0 0 14px rgba(230,225,255,0.1); }
+    100% { box-shadow: 0 0 12px rgba(230,225,255,0.22), 0 0 4px rgba(230,225,255,0.4), inset 0 0 10px rgba(230,225,255,0.06); }
+}
+
+/* ── Image keys ── */
+.key img {
+    width: 32px;
+    height: 32px;
+    object-fit: contain;
+    filter: grayscale(1) brightness(0.4);
+    transition: filter 0.08s ease, transform 0.08s ease;
+}
+
+.key.active img {
+    filter: grayscale(1) brightness(1.6) drop-shadow(0 0 4px rgba(255,252,255,0.9)) drop-shadow(0 0 8px rgba(230,225,255,0.6));
+    transform: scale(1.1);
+}
+
+.svg-wrap {
+    display: contents;
+}
+
+/* ── Text keys (WASD layout) ── */
+.text-key {
+    padding: 0;
+    justify-content: center;
+}
+
+.key-text {
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: 1px;
+    line-height: 1;
+}
+
+.wide .key-text {
+    font-size: 10px;
+}
+
+/* ── Layout switcher ── */
+.switcher {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    margin-top: 6px;
+    -webkit-app-region: no-drag;
+}
+
+.switcher #layout-name {
+    font-size: 7px;
+    letter-spacing: 2.5px;
+    color: rgba(200, 195, 215, 0.35);
+    min-width: 60px;
+    text-align: center;
+}
+
+.switch-btn, .switcher button {
+    background: none;
+    border: none;
+    color: rgba(200, 195, 215, 0.3);
+    font-size: 14px;
+    cursor: pointer;
+    padding: 0 2px;
+    line-height: 1;
+    font-family: inherit;
+    transition: color 0.1s;
+}
+
+.switch-btn:hover, .switcher button:hover {
+    color: rgba(200, 195, 215, 0.75);
+}

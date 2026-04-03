@@ -1,0 +1,42 @@
+{
+  "name": "keyboardreader",
+  "version": "1.0.0",
+  "description": "Keyboard & mouse input overlay",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "build": "electron-builder"
+  },
+  "keywords": [],
+  "author": "Cameron Mcrae",
+  "license": "ISC",
+  "build": {
+    "appId": "com.keyboardreader.app",
+    "mac": {
+      "target": "dmg",
+      "category": "public.app-category.utilities"
+    },
+    "win": {
+      "target": "nsis"
+    },
+    "files": [
+      "main.js",
+      "preload.js",
+      "capture.py",
+      "public/**",
+      "onboarding/**"
+    ],
+    "publish": {
+      "provider": "github",
+      "owner": "",
+      "repo": ""
+    }
+  },
+  "dependencies": {
+    "electron-updater": "^6.8.3"
+  },
+  "devDependencies": {
+    "electron": "^41.1.1",
+    "electron-builder": "^26.8.1"
+  }
+}
