@@ -22,7 +22,6 @@
     "files": [
       "main.js",
       "preload.js",
-      "capture.py",
       "public/**",
       "onboarding/**"
     ],
@@ -33,7 +32,8 @@
     }
   },
   "dependencies": {
-    "electron-updater": "^6.8.3"
+    "electron-updater": "^6.8.3",
+    "uiohook-napi": "^1.5.5"
   },
   "devDependencies": {
     "electron": "^41.1.1",

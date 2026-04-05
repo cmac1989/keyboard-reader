@@ -1,21 +1,10 @@
-const { app, BrowserWindow, ipcMain, Menu, globalShortcut, shell } = require('electron');
+const { app, BrowserWindow, ipcMain, Menu, Tray, nativeImage, globalShortcut, shell } = require('electron');
 const { autoUpdater } = require('electron-updater');
-const { spawn } = require('child_process');
 const path = require('path');
 const fs   = require('fs');
 
 const IS_MAC = process.platform === 'darwin';
 const IS_WIN = process.platform === 'win32';
-
-// Resolve python command: try python3 first, fall back to python
-function pythonCommand() {
-    const { spawnSync } = require('child_process');
-    for (const cmd of ['python3', 'python', 'py']) {
-        const r = spawnSync(cmd, ['--version'], { encoding: 'utf8' });
-        if (r.status === 0) return cmd;
-    }
-    return 'python3';
-}
 
 // ── Settings ──────────────────────────────────────────────
 const DEFAULTS = { alwaysOnTop: true, positionLock: false, clickThrough: false, firstLaunch: true };
@@ -33,6 +22,44 @@ function saveSettings() {
 
 // ── Windows ───────────────────────────────────────────────
 let win;
+let tray;
+
+function buildTrayMenu() {
+    return Menu.buildFromTemplate([
+        {
+            label: 'Always on Top',
+            type: 'checkbox', checked: settings.alwaysOnTop,
+            click: () => { settings.alwaysOnTop = !settings.alwaysOnTop; saveSettings(); applySettings(); buildTray(); },
+        },
+        {
+            label: 'Position Lock',
+            type: 'checkbox', checked: settings.positionLock,
+            click: () => { settings.positionLock = !settings.positionLock; saveSettings(); win?.webContents.send('settings-update', settings); buildTray(); },
+        },
+        {
+            label: IS_MAC ? 'Click Through  ⌘⇧T' : 'Click Through  Ctrl+Shift+T',
+            type: 'checkbox', checked: settings.clickThrough,
+            click: () => { settings.clickThrough = !settings.clickThrough; saveSettings(); applySettings(); buildTray(); },
+        },
+        { type: 'separator' },
+        { label: 'Check for Updates', click: () => autoUpdater.checkForUpdatesAndNotify() },
+        { type: 'separator' },
+        { label: 'Quit', click: () => app.quit() },
+    ]);
+}
+
+function buildTray() {
+    if (!tray) {
+        // 1x1 transparent PNG as placeholder — tray title does the visual work on macOS
+        const img = nativeImage.createFromDataURL(
+            'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAC0lEQVQI12NgAAIABQAABjE+ibYAAAAASUVORK5CYII='
+        );
+        tray = new Tray(img);
+        tray.setTitle('✦');
+        tray.setToolTip('Keyboard Overlay');
+    }
+    tray.setContextMenu(buildTrayMenu());
+}
 
 function applySettings() {
     if (!win) return;
@@ -77,60 +104,69 @@ function createOnboarding() {
     });
 }
 
-// ── Python capture ────────────────────────────────────────
+// ── Logging ───────────────────────────────────────────────
+let logPath;
+function log(...args) {
+    const line = `[${new Date().toISOString()}] ${args.join(' ')}\n`;
+    console.log(...args);
+    try { fs.appendFileSync(logPath, line); } catch (_) {}
+}
+
+// ── Input capture (uiohook-napi, runs in-process) ─────────
 function startCapture() {
-    const py = spawn(pythonCommand(), [path.join(__dirname, 'capture.py')]);
+    const { uIOhook, UiohookKey } = require('uiohook-napi');
 
-    py.stdout.on('data', data => {
-        data.toString().trim().split('\n').forEach(line => {
-            try { win?.webContents.send('input-event', JSON.parse(line)); } catch (_) {}
-        });
+    const KEY_MAP = {
+        [UiohookKey.ArrowUp]:    'UP',
+        [UiohookKey.ArrowDown]:  'DOWN',
+        [UiohookKey.ArrowLeft]:  'LEFT',
+        [UiohookKey.ArrowRight]: 'RIGHT',
+        [UiohookKey.W]: 'W', [UiohookKey.A]: 'A',
+        [UiohookKey.S]: 'S', [UiohookKey.D]: 'D',
+        [UiohookKey.Z]: 'Z', [UiohookKey.X]: 'X',
+        [UiohookKey.C]: 'C', [UiohookKey.E]: 'E',
+        [UiohookKey.R]: 'R', [UiohookKey.F]: 'F',
+        [UiohookKey.Space]:      'SPACE',
+        [UiohookKey.Shift]:      'SHIFT',
+        [UiohookKey.ShiftRight]: 'SHIFT',
+        [UiohookKey.Ctrl]:       'CTRL',
+        [UiohookKey.CtrlRight]:  'CTRL',
+    };
+
+    uIOhook.on('keydown', e => {
+        const key = KEY_MAP[e.keycode];
+        if (key) win?.webContents.send('input-event', { type: 'keyDown', key });
     });
 
-    py.stderr.on('data', d => console.error('Python:', d.toString()));
-
-    // Restart on crash
-    py.on('close', code => {
-        if (code !== 0) {
-            console.warn('Python exited with code', code, '— restarting in 2s');
-            setTimeout(startCapture, 2000);
-        }
+    uIOhook.on('keyup', e => {
+        const key = KEY_MAP[e.keycode];
+        if (key) win?.webContents.send('input-event', { type: 'keyUp', key });
     });
+
+    try {
+        uIOhook.start();
+        log('uiohook started');
+    } catch (e) {
+        log('uiohook error:', e.message);
+    }
 }
 
 // ── Context menu ──────────────────────────────────────────
 function showContextMenu(sender) {
-    Menu.buildFromTemplate([
-        {
-            label: 'Always on Top',
-            type: 'checkbox', checked: settings.alwaysOnTop,
-            click: () => { settings.alwaysOnTop = !settings.alwaysOnTop; saveSettings(); applySettings(); },
-        },
-        {
-            label: 'Position Lock',
-            type: 'checkbox', checked: settings.positionLock,
-            click: () => { settings.positionLock = !settings.positionLock; saveSettings(); win.webContents.send('settings-update', settings); },
-        },
-        {
-            label: IS_MAC ? 'Click Through  ⌘⇧T' : 'Click Through  Ctrl+Shift+T',
-            type: 'checkbox', checked: settings.clickThrough,
-            click: () => { settings.clickThrough = !settings.clickThrough; saveSettings(); applySettings(); },
-        },
-        { type: 'separator' },
-        { label: 'Check for Updates', click: () => autoUpdater.checkForUpdatesAndNotify() },
-        { type: 'separator' },
-        { label: 'Quit', click: () => app.quit() },
-    ]).popup({ window: BrowserWindow.fromWebContents(sender) });
+    buildTrayMenu().popup({ window: BrowserWindow.fromWebContents(sender) });
 }
 
 // ── App lifecycle ─────────────────────────────────────────
 app.whenReady().then(() => {
     SETTINGS_PATH = path.join(app.getPath('userData'), 'settings.json');
+    logPath = path.join(app.getPath('userData'), 'debug.log');
+    log('App started, packaged:', app.isPackaged);
     loadSettings();
 
     if (settings.firstLaunch) createOnboarding();
     createOverlay();
     startCapture();
+    buildTray();
 
     // Global shortcut — toggle click-through even when window is non-interactive
     globalShortcut.register('CommandOrControl+Shift+T', () => {
